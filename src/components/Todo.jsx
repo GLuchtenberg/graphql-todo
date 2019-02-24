@@ -6,24 +6,46 @@ class Todo extends Component {
   state = {
     newTodoText:'',
   }
-  renderTodos = ()=> (
-    <ul>
-      { this.props.todos.allTodoes.map(todo => 
-        <li key={todo.id}>
-          {todo.text}
-        </li>)
+  updateTodo = (id,completed)=>{
+    this.props.updateTodo({
+      variables: {id, completed},
+      update: (proxy, {data:{deleteTodo}}) =>{
+        this.props.todos.refetch()
       }
-    </ul>
-  );
+    })
+  }
+  deleteTodo = (id) =>{
+    this.props.deleteTodo({
+      variables:{ id: id },
+      update: (proxy, {data:{deleteTodo}}) =>{
+        this.props.todos.refetch()
+      }
+    })
+  }
+  
   addTodo = ()=>{
     const {newTodoText} = this.state;
     this.props.addTodo({
       variables:{text: newTodoText },
       update: (proxy, {data:{createTodo}}) =>{
-        this.props.todos.refresh()
+        this.props.todos.refetch()
       }
     })
   }
+  renderTodos = ()=> (
+    <ul>
+      { this.props.todos.allTodoes.map(todo => 
+        <li
+           key={todo.id}
+           onClick={() => this.updateTodo(todo.id, !todo.completed)}>
+          <span style={{
+            textDecoration: todo.completed ? 'line-through' : 'none'
+          }} >{todo.text}</span>
+          <span onClick={() => this.deleteTodo(todo.id)} >  -  Delete</span>
+        </li>)
+      }
+    </ul>
+  );
   render() {
     const{
       todos
@@ -54,6 +76,7 @@ const TodosQuery = gql`
         allTodoes {
             id
             text
+            completed
         }
     }
 `;
@@ -74,9 +97,20 @@ const DeleteTodo = gql`
       completed
     }
   }`
+const UpdateTodo = gql`
+  mutation($id: ID!, $completed: Boolean!){
+    updateTodo(
+      id: $id
+      completed: $completed
+    ) {
+      id
+    }
+  }
+`
 
 export default compose(
   graphql(TodosQuery, { name: 'todos' }),
   graphql(AddTodo,{ name: 'addTodo' }),
-  graphql(DeleteTodo, { name: 'deleteTodo' })
+  graphql(DeleteTodo, { name: 'deleteTodo' }),
+  graphql(UpdateTodo, { name: 'updateTodo' })
 ) (Todo);
