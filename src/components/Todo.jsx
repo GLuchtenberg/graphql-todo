@@ -3,10 +3,9 @@ import { useQuery, useMutation } from 'react-apollo-hooks';
 import { TodosQuery,
          AddTodo,
          DeleteTodo,
-         UpdateTodo,
-                      } from './query'
+         UpdateTodo } from './query'
 
-const Todo = ({todo}) => {
+const TodoItem = ({todo}) => {
 
   const updateTodo = useMutation(UpdateTodo,{
     variables:{ id: todo.id, completed: !todo.completed },
@@ -35,7 +34,7 @@ const Todos = ({todos}) => {
     <ul>
       { 
         todos.map(todo => 
-          <Todo todo={todo} key={todo.id}/>
+          <TodoItem todo={todo} key={todo.id}/>
         )
       }
     </ul>
@@ -64,7 +63,10 @@ const TodoList = () => {
                value={value}
                 onChange={e => setValue( e.target.value)}
                />
-              <input type="submit" value="create" onClick={addTodo}/>
+              <input type="submit" value="create" onClick={() => {
+                addTodo()
+                setValue('')
+              }}/>
            </div>
       </React.Fragment>
     ) 
