@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-import {ApolloProvider} from 'react-apollo';
+import { ApolloProvider } from 'react-apollo';
+import { ApolloProvider as ApolloProviderHooks} from 'react-apollo-hooks';
 
 import logo from './logo.svg';
 import './App.css';
@@ -10,12 +11,14 @@ class App extends Component {
   render() {
     return (
       <ApolloProvider client={apolloClient}>
-        <div className="App">
-          <header className="App-header">
-            <img src={logo} className="App-logo" alt="logo" />
-            <Todo />
-          </header>
-        </div>
+        <ApolloProviderHooks client={apolloClient}>
+          <div className="App">
+            <header className="App-header">
+              <img src={logo} className="App-logo" alt="logo" />
+              <Todo />
+            </header>
+          </div>
+        </ApolloProviderHooks>
       </ApolloProvider>
     );
   }

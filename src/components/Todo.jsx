@@ -1,116 +1,73 @@
-import React, { Component } from 'react'
-import { graphql, compose } from 'react-apollo';
-import gql from 'graphql-tag'
+import React, { useState } from 'react';
+import { useQuery, useMutation } from 'react-apollo-hooks';
+import { TodosQuery,
+         AddTodo,
+         DeleteTodo,
+         UpdateTodo,
+                      } from './query'
 
-class Todo extends Component {
-  state = {
-    newTodoText:'',
-  }
-  updateTodo = (id,completed)=>{
-    this.props.updateTodo({
-      variables: {id, completed},
-      update: (proxy, {data:{deleteTodo}}) =>{
-        this.props.todos.refetch()
-      }
-    })
-  }
-  deleteTodo = (id) =>{
-    this.props.deleteTodo({
-      variables:{ id: id },
-      update: (proxy, {data:{deleteTodo}}) =>{
-        this.props.todos.refetch()
-      }
-    })
-  }
-  
-  addTodo = ()=>{
-    const {newTodoText} = this.state;
-    this.props.addTodo({
-      variables:{text: newTodoText },
-      update: (proxy, {data:{createTodo}}) =>{
-        this.props.todos.refetch()
-      }
-    })
-  }
-  renderTodos = ()=> (
-    <ul>
-      { this.props.todos.allTodoes.map(todo => 
-        <li
-           key={todo.id}
-           onClick={() => this.updateTodo(todo.id, !todo.completed)}>
-          <span style={{
-            textDecoration: todo.completed ? 'line-through' : 'none'
-          }} >{todo.text}</span>
-          <span onClick={() => this.deleteTodo(todo.id)} >  -  Delete</span>
-        </li>)
-      }
-    </ul>
-  );
-  render() {
-    const{
-      todos
-    }  = this.props;
-    
-    return (
-      <React.Fragment>
-          { 
-            todos.loading 
-            ? 'Carregando' 
-            : this.renderTodos()
-          }
-          <div>
-            <input 
-              type="text" 
-              value={this.state.newTodoText}
-              onChange={e => this.setState({newTodoText: e.target.value})}
-              />
-            <input type="submit" value="create" onClick={this.addTodo}/>
-          </div>
-      </React.Fragment>
-    )
-  }
+const Todo = ({todo}) => {
+
+  const updateTodo = useMutation(UpdateTodo,{
+    variables:{ id: todo.id, completed: !todo.completed },
+    refetchQueries:[{query:TodosQuery}],
+  });
+
+  const deleteTodo = useMutation(DeleteTodo, {
+    variables: {id:todo.id},
+    refetchQueries:[{query:TodosQuery}]
+  });
+
+  return (
+    <li
+        onClick={updateTodo}>
+        <span style={{
+          textDecoration: todo.completed ? 'line-through' : 'none'
+        }} >{todo.text}</span>
+        <span onClick={deleteTodo} >  -  Delete</span>
+    </li>
+  )
 }
 
-const TodosQuery = gql`
-    query {
-        allTodoes {
-            id
-            text
-            completed
-        }
-    }
-`;
-const AddTodo = gql`
-  mutation($text: String!){
-    createTodo(text: $text){
-      id
-      text
-      completed
-    }
-  }
-`;
-const DeleteTodo = gql`
-  mutation($id: ID!){
-    deleteTodo(id: $id){
-      id
-      text
-      completed
-    }
-  }`
-const UpdateTodo = gql`
-  mutation($id: ID!, $completed: Boolean!){
-    updateTodo(
-      id: $id
-      completed: $completed
-    ) {
-      id
-    }
-  }
-`
 
-export default compose(
-  graphql(TodosQuery, { name: 'todos' }),
-  graphql(AddTodo,{ name: 'addTodo' }),
-  graphql(DeleteTodo, { name: 'deleteTodo' }),
-  graphql(UpdateTodo, { name: 'updateTodo' })
-) (Todo);
+const Todos = ({todos}) => {
+  return (
+    <ul>
+      { 
+        todos.map(todo => 
+          <Todo todo={todo} key={todo.id}/>
+        )
+      }
+    </ul>
+  )
+}
+const TodoList = () => {
+    const {
+      data, loading
+    } = useQuery(TodosQuery)
+    const [ value , setValue ] = useState('');
+    const allTodoes = data.allTodoes ? data.allTodoes : [];
+    const addTodo = useMutation(AddTodo,{
+      variables: {text: value},
+      refetchQueries: [{query:TodosQuery}]
+    })
+    return (
+      <React.Fragment>
+           { 
+             loading 
+             ? 'Carregando' 
+             : <Todos todos={allTodoes}/>
+           }
+           <div>
+             <input 
+               type="text" 
+               value={value}
+                onChange={e => setValue( e.target.value)}
+               />
+              <input type="submit" value="create" onClick={addTodo}/>
+           </div>
+      </React.Fragment>
+    ) 
+}
+
+export default TodoList;
