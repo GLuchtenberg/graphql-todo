@@ -1,4 +1,4 @@
-import gql from 'graphql-tag'
+import gql from 'graphql-tag';
 
 export const TodosQuery = gql`
     query {
@@ -25,7 +25,7 @@ export const DeleteTodo = gql`
       text
       completed
     }
-  }`
+  }`;
 export const UpdateTodo = gql`
   mutation($id: ID!, $completed: Boolean!){
     updateTodo(
@@ -35,4 +35,4 @@ export const UpdateTodo = gql`
       id
     }
   }
-`
+`;
